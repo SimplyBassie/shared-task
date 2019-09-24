@@ -9,9 +9,6 @@ def read_data():
 
     return trainingdata
 
-def tokenize(text):
-    return word_tokenize(text)
-
 def main():
     dataframe = read_data()
 
