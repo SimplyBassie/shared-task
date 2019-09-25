@@ -11,6 +11,7 @@ def read_data():
 
 def main():
     dataframe = read_data()
+    print(dataframe)
 
 
 if __name__ == '__main__':
