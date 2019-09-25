@@ -13,6 +13,7 @@ def read_data():
     stopwordlist = stopwords.words('english')
     stemmer = SnowballStemmer('english')
     lemmatizer = WordNetLemmatizer()
+    print("aapje")
 
     documents = []
     labels = []
