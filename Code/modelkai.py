@@ -30,7 +30,8 @@ def read_data():
             documents.append(tokens[1])
             labels.append(tokens[2] )
 
-    #print(documents)
+    print(documents)
+    print(labels)
 
     return documents, labels
 
