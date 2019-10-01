@@ -4,6 +4,10 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.metrics import classification_report
 from sklearn import svm
 import sys
+from nltk.corpus import stopwords
+from nltk.stem.snowball import SnowballStemmer
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import TweetTokenizer
 
 def read_data():
     # id	tweet	subtask_a	subtask_b	subtask_c
@@ -16,6 +20,26 @@ def read_data():
 def identity(x):
     return x
 
+def preprocess(tweet):
+    stemmer = SnowballStemmer('english')
+    lemmatizer = WordNetLemmatizer()
+    pptweetlist = []
+    tweet = stemmer.stem(tweet)
+    tweet = lemmatizer.lemmatize(tweet)
+    return tweet
+
+def tokenize(tweet):
+    tknzr = TweetTokenizer()
+    stop_words = stopwords.words('english')
+    wordlist = tknzr.tokenize(tweet)
+    wordlistwithoutstopwords = []
+    for word in wordlist:
+        if word not in stop_words:
+            wordlistwithoutstopwords.append(word)
+    toktweet = " ".join(wordlistwithoutstopwords)
+    return toktweet
+
+
 def main():
     training_data, test_data_text, test_data_labels = read_data()
 
@@ -24,10 +48,11 @@ def main():
     Xtest = test_data_text['tweet'].tolist()
     Ytest = test_data_labels['subtask_a'].tolist()
 
-    vec = TfidfVectorizer(preprocessor = identity,
-                          tokenizer = identity)
+    vec = TfidfVectorizer(preprocessor = preprocess,
+                          tokenizer = tokenize,
+                          ngram_range = (1,5))
 
-    clf = svm.SVC(kernel='linear', C=1.0)
+    clf = svm.LinearSVC(C=1.0)
     classifier = Pipeline( [('vec', vec), ('cls', clf)] )
 
     classifier.fit(Xtrain, Ytrain)
