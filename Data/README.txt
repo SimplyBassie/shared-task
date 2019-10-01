@@ -1,4 +1,4 @@
-o========================
+﻿========================
 
 Offensive Language Identification Dataset (OLID)
 v 1.0: March 15 2018

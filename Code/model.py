@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import csv
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
@@ -11,12 +10,13 @@ from sklearn.tree import DecisionTreeClassifier
 from nltk.corpus import stopwords
 from nltk.stem.snowball import SnowballStemmer
 from nltk.stem import WordNetLemmatizer
+from sklearn import svm
 
 def read_data():
     # id	tweet	subtask_a	subtask_b	subtask_c
     with open('../Data/olid-training-v1.0.tsv') as tsvfile:
       file = csv.reader(tsvfile, delimiter='\t')
-      trainingdata = pd.DataFrame(file, columns=['id', 'tweet', 'subtask_a', 'subtask_b', 'subtask_c'])
+      trainingdata = pd.DataFrame(file)
 
     return trainingdata
 
@@ -25,47 +25,26 @@ def identity(x):
 
 def main():
     dataframe = read_data()
-    X = dataframe['tweet'].tolist()
-    Y = dataframe['subtask_a'].tolist()
-
-    split_point = int(0.75*len(X))
-    Xtrain = X[:split_point]
-    Ytrain = Y[:split_point]
-    Xtest = X[split_point:]
-    Ytest = Y[split_point:]
+    print(dataframe.head())
+    #Xtrain = dataframe_train['tweet'].tolist()
+    #Ytrain = dataframe_train['subtask_a'].tolist()
+    #Xtest =
 
     vec = TfidfVectorizer(preprocessor = identity,
                           tokenizer = identity)
 
-    classifier = Pipeline( [('vec', vec),
+    #clf = svm.SVC(kernel='linear', C=1.0)
+    #classifier = Pipeline( [('vec', vec),
                             #('cls', MultinomialNB())] )
                             #('cls', DecisionTreeClassifier(max_depth=60, min_impurity_decrease=0.001))] )
-                            ('cls', KNeighborsClassifier(n_neighbors=63))] )
+                            #('cls', KNeighborsClassifier(n_neighbors=63))] )
+                            ('cls', clf)] )
 
-    classifier.fit(Xtrain, Ytrain)
+    #classifier.fit(Xtrain, Ytrain)
 
-    Yguess = classifier.predict(Xtest)
+    #Yguess = classifier.predict(Xtest)
 
-    print(classification_report(Ytest, Yguess))
-
-if __name__ == '__main__':
-    main()
-=======
-import csv
-import pandas as pd
-
-def read_data():
-    # id	tweet	subtask_a	subtask_b	subtask_c
-    with open('../Data/olid-training-v1.0.tsv') as tsvfile:
-      file = csv.reader(tsvfile, delimiter='\t')
-      trainingdata = pd.DataFrame(file, columns=['id', 'tweet', 'subtask_a', 'subtask_b', 'subtask_c'])
-
-    return trainingdata
-
-def main():
-    dataframe = read_data()
-
+    #print(classification_report(Ytest, Yguess))
 
 if __name__ == '__main__':
     main()
->>>>>>> a9c70be7c054d40d8765e9b79485b830999b2d45
