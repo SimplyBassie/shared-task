@@ -1,50 +1,40 @@
-import csv
 import pandas as pd
-from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
-from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
-from sklearn.metrics import confusion_matrix
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.metrics import classification_report
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.tree import DecisionTreeClassifier
-from nltk.corpus import stopwords
-from nltk.stem.snowball import SnowballStemmer
-from nltk.stem import WordNetLemmatizer
 from sklearn import svm
+import sys
 
 def read_data():
     # id	tweet	subtask_a	subtask_b	subtask_c
-    with open('../Data/olid-training-v1.0.tsv') as tsvfile:
-      file = csv.reader(tsvfile, delimiter='\t')
-      trainingdata = pd.DataFrame(file)
-
-    return trainingdata
+    training_data = pd.read_csv("../Data/olid-training-v1.0.tsv", sep='\t')
+    test_data_text = pd.read_csv("../Data/testset-levela.tsv", sep='\t')
+    test_data_labels = pd.read_csv("../Data/labels-levela.csv", header = None)
+    test_data_labels.columns = ['id', 'subtask_a']
+    return training_data, test_data_text, test_data_labels
 
 def identity(x):
     return x
 
 def main():
-    dataframe = read_data()
-    print(dataframe.head())
-    #Xtrain = dataframe_train['tweet'].tolist()
-    #Ytrain = dataframe_train['subtask_a'].tolist()
-    #Xtest =
+    training_data, test_data_text, test_data_labels = read_data()
+
+    Xtrain = training_data['tweet'].tolist()
+    Ytrain = training_data['subtask_a'].tolist()
+    Xtest = test_data_text['tweet'].tolist()
+    Ytest = test_data_labels['subtask_a'].tolist()
 
     vec = TfidfVectorizer(preprocessor = identity,
                           tokenizer = identity)
 
-    #clf = svm.SVC(kernel='linear', C=1.0)
-    #classifier = Pipeline( [('vec', vec),
-                            #('cls', MultinomialNB())] )
-                            #('cls', DecisionTreeClassifier(max_depth=60, min_impurity_decrease=0.001))] )
-                            #('cls', KNeighborsClassifier(n_neighbors=63))] )
-                            ('cls', clf)] )
+    clf = svm.SVC(kernel='linear', C=1.0)
+    classifier = Pipeline( [('vec', vec), ('cls', clf)] )
 
-    #classifier.fit(Xtrain, Ytrain)
+    classifier.fit(Xtrain, Ytrain)
 
-    #Yguess = classifier.predict(Xtest)
+    Yguess = classifier.predict(Xtest)
 
-    #print(classification_report(Ytest, Yguess))
+    print(classification_report(Ytest, Yguess))
 
 if __name__ == '__main__':
     main()
