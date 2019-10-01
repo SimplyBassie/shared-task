@@ -2,12 +2,15 @@ import pandas as pd
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.metrics import classification_report
-from sklearn import svm
+from sklearn.svm import LinearSVC
 import sys
 from nltk.corpus import stopwords
 from nltk.stem.snowball import SnowballStemmer
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import TweetTokenizer
+from sklearn.ensemble import VotingClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
 
 def read_data():
     # id	tweet	subtask_a	subtask_b	subtask_c
@@ -52,8 +55,12 @@ def main():
                           tokenizer = tokenize,
                           ngram_range = (1,5))
 
-    clf = svm.LinearSVC(C=1.0)
-    classifier = Pipeline( [('vec', vec), ('cls', clf)] )
+    clf1 = DecisionTreeClassifier(max_depth=20)
+    clf2 = KNeighborsClassifier(n_neighbors=9)
+    clf3 = LinearSVC(C=1)
+    ens = VotingClassifier(estimators=[('dt', clf1), ('knn', clf2), ('svc', clf3)], voting='hard', weights=[1, 1, 1])
+
+    classifier = Pipeline( [('vec', vec), ('cls', ens)] )
 
     classifier.fit(Xtrain, Ytrain)
 
