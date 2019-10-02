@@ -42,9 +42,16 @@ def tokenize(tweet):
     toktweet = " ".join(wordlistwithoutstopwords)
     return toktweet
 
+def blacklist_reader():
+    file = open("../Data/offensive_words.txt", "r")
+    f = file.read().strip()
+    blacklist = f.split("\n")
+    return blacklist
+
 
 def main():
     training_data, test_data_text, test_data_labels = read_data()
+    blacklist = blacklist_reader()
 
     Xtrain = training_data['tweet'].tolist()
     Ytrain = training_data['subtask_a'].tolist()
