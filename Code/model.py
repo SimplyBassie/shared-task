@@ -35,6 +35,8 @@ def preprocess(tweet):
     return tweet
 
 def tokenize(tweet):
+    blacklistword = False
+    whitelistword = False
     tknzr = TweetTokenizer()
     stop_words = stopwords.words('english')
     wordlist = tknzr.tokenize(tweet)
@@ -42,7 +44,23 @@ def tokenize(tweet):
     for word in wordlist:
         if word not in stop_words:
             wordlistwithoutstopwords.append(word)
+        if word in blacklist:
+            blacklistword = True
+        else:
+            if word in whitelist:
+                whitelistword = True
     toktweet = " ".join(wordlistwithoutstopwords)
+    if blacklistword:
+        if use_blacklist:
+            wordlistwithoutstopwords.append("BLACKLIST")   #Extra feature for blacklist
+        else:
+            pass
+    else:
+        if whitelistword:
+            if use_blacklist:
+                wordlistwithoutstopwords.append("WHITELIST") #Extra feature for whitelist
+            else:
+                pass
     return wordlistwithoutstopwords
 
 def blacklist_reader():
@@ -50,6 +68,12 @@ def blacklist_reader():
     f = file.read().strip()
     blacklist = f.split("\n")
     return blacklist
+
+def whitelist_reader():
+    file = open("../Data/not_offensive_words.txt", "r")
+    f = file.read().strip()
+    whitelist = f.split("\n")
+    return whitelist
 
 def print_n_most_informative_features(coefs, features, n):
     # Prints the n most informative features
@@ -62,12 +86,23 @@ def print_n_most_informative_features(coefs, features, n):
 
 def main():
     training_data, dev_data = read_data()
+    global blacklist
     blacklist = blacklist_reader()
+    global whitelist
+    whitelist = whitelist_reader()
+    global use_blacklist
+    use_blacklist = True
 
-    Xtrain = training_data['tweet'].tolist()
-    Ytrain = training_data['subtask_a'].tolist()
-    Xtest = dev_data['tweet'].tolist()
-    Ytest = dev_data['subtask_a'].tolist()
+    if sys.argv[1].lower() == "--a":
+        Xtrain = training_data['tweet'].tolist()
+        Ytrain = training_data['subtask_a'].tolist()
+        Xtest = dev_data['tweet'].tolist()
+        Ytest = dev_data['subtask_a'].tolist()
+    elif sys.argv[1].lower() == "--b":
+        Xtrain = training_data['tweet'].tolist()
+        Ytrain = training_data['subtask_b'].tolist()
+        Xtest = dev_data['tweet'].tolist()
+        Ytest = dev_data['subtask_b'].tolist()
 
     vec = TfidfVectorizer(tokenizer = tokenize,
                           preprocessor = preprocess,
