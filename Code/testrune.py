@@ -12,17 +12,16 @@ from nltk.tokenize import word_tokenize
 from sklearn.ensemble import VotingClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.pipeline import FeatureUnion
-from sklearn.feature_extraction import DictVectorizer
-
+import numpy as np
 
 def read_data():
     # id	tweet	subtask_a	subtask_b	subtask_c
-    training_data = pd.read_csv("../Data/olid-training-v1.0.tsv", sep='\t')
-    test_data_text = pd.read_csv("../Data/testset-levela.tsv", sep='\t')
-    test_data_labels = pd.read_csv("../Data/labels-levela.csv", header = None)
-    test_data_labels.columns = ['id', 'subtask_a']
-    return training_data, test_data_text, test_data_labels
+    training_set = pd.read_csv("../Data/olid-training-v1.0.tsv", sep='\t')
+    training_data = training_set[(training_set.index < np.percentile(training_set.index, 80))]
+    dev_data = training_set[(training_set.index > np.percentile(training_set.index, 80))]
+    #is_offensive =  training_data['subtask_a'] == 'OFF'
+    #is_targeted = training_data['subtask_b'] == 'TIN'
+    return training_data, dev_data
 
 def identity(x):
     return x
@@ -86,25 +85,28 @@ def print_n_most_informative_features(coefs, features, n):
 
 
 def main():
-    training_data, test_data_text, test_data_labels = read_data()
+    training_data, dev_data = read_data()
     global blacklist
     blacklist = blacklist_reader()
     global whitelist
     whitelist = whitelist_reader()
     global use_blacklist
-    use_blacklist = False
+    use_blacklist = True
 
-    Xtrain = training_data['tweet'].tolist()
-    Ytrain = training_data['subtask_a'].tolist()
-    Xtest = test_data_text['tweet'].tolist()
-    Ytest = test_data_labels['subtask_a'].tolist()
+    if sys.argv[1].lower() == "--a":
+        Xtrain = training_data['tweet'].tolist()
+        Ytrain = training_data['subtask_a'].tolist()
+        Xtest = dev_data['tweet'].tolist()
+        Ytest = dev_data['subtask_a'].tolist()
+    elif sys.argv[1].lower() == "--b":
+        Xtrain = training_data['tweet'].tolist()
+        Ytrain = training_data['subtask_b'].tolist()
+        Xtest = dev_data['tweet'].tolist()
+        Ytest = dev_data['subtask_b'].tolist()
 
-    tfidf_vec = TfidfVectorizer(tokenizer = tokenize,
-                                preprocessor = preprocess,
-                                ngram_range = (1,5))
-
-    vec = FeatureUnion([("tfidf", tfidf_vec)])
-
+    vec = TfidfVectorizer(tokenizer = tokenize,
+                          preprocessor = preprocess,
+                          ngram_range = (1,5))
 
     #clf1 = DecisionTreeClassifier(max_depth=20)
     #clf2 = KNeighborsClassifier(n_neighbors=9)
@@ -115,12 +117,9 @@ def main():
 
     classifier.fit(Xtrain, Ytrain)
 
-
     coefs = classifier.named_steps['cls'].coef_
     features = classifier.named_steps['vec'].get_feature_names()
     print_n_most_informative_features(coefs, features, 10)
-
-
 
     Yguess = classifier.predict(Xtest)
 
