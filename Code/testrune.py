@@ -113,7 +113,7 @@ def main():
     clf3 = LinearSVC(C=1)
     #ens = VotingClassifier(estimators=[('dt', clf1), ('knn', clf2), ('svc', clf3)], voting='hard', weights=[1, 1, 1])
 
-    classifier = Pipeline( [('vec', vec), ('cls', clf3)] )
+    classifier = Pipeline( [('vec', vec), ('cls', clf3)] ) #ensemble?
 
     classifier.fit(Xtrain, Ytrain)
 
