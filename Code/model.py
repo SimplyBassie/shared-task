@@ -12,14 +12,16 @@ from nltk.tokenize import word_tokenize
 from sklearn.ensemble import VotingClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
+import numpy as np
 
 def read_data():
     # id	tweet	subtask_a	subtask_b	subtask_c
-    training_data = pd.read_csv("../Data/olid-training-v1.0.tsv", sep='\t')
-    test_data_text = pd.read_csv("../Data/testset-levela.tsv", sep='\t')
-    test_data_labels = pd.read_csv("../Data/labels-levela.csv", header = None)
-    test_data_labels.columns = ['id', 'subtask_a']
-    return training_data, test_data_text, test_data_labels
+    training_set = pd.read_csv("../Data/olid-training-v1.0.tsv", sep='\t')
+    training_data = training_set[(training_set.index < np.percentile(training_set.index, 80))]
+    dev_data = training_set[(training_set.index > np.percentile(training_set.index, 80))]
+    #is_offensive =  training_data['subtask_a'] == 'OFF'
+    #is_targeted = training_data['subtask_b'] == 'TIN'
+    return training_data, dev_data
 
 def identity(x):
     return x
@@ -59,13 +61,13 @@ def print_n_most_informative_features(coefs, features, n):
 
 
 def main():
-    training_data, test_data_text, test_data_labels = read_data()
+    training_data, dev_data = read_data()
     blacklist = blacklist_reader()
 
     Xtrain = training_data['tweet'].tolist()
     Ytrain = training_data['subtask_a'].tolist()
-    Xtest = test_data_text['tweet'].tolist()
-    Ytest = test_data_labels['subtask_a'].tolist()
+    Xtest = dev_data['tweet'].tolist()
+    Ytest = dev_data['subtask_a'].tolist()
 
     vec = TfidfVectorizer(tokenizer = tokenize,
                           preprocessor = preprocess,
