@@ -1,25 +1,31 @@
-import csv
 import pandas as pd
-from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
-from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
-from sklearn.metrics import confusion_matrix
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.metrics import classification_report
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.svm import LinearSVC
+import sys
 from nltk.corpus import stopwords
 from nltk.stem.snowball import SnowballStemmer
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import TweetTokenizer
-from sklearn import svm
+from nltk.tokenize import word_tokenize
+from sklearn.ensemble import VotingClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.pipeline import FeatureUnion
+from sklearn.feature_extraction import DictVectorizer
+
 
 def read_data():
     # id	tweet	subtask_a	subtask_b	subtask_c
-    with open('../Data/olid-training-v1.0.tsv') as tsvfile:
-      file = csv.reader(tsvfile, delimiter='\t')
-      trainingdata = pd.DataFrame(file, columns=['id', 'tweet', 'subtask_a', 'subtask_b', 'subtask_c'])
+    training_data = pd.read_csv("../Data/olid-training-v1.0.tsv", sep='\t')
+    test_data_text = pd.read_csv("../Data/testset-levela.tsv", sep='\t')
+    test_data_labels = pd.read_csv("../Data/labels-levela.csv", header = None)
+    test_data_labels.columns = ['id', 'subtask_a']
+    return training_data, test_data_text, test_data_labels
 
-    return trainingdata
+def identity(x):
+    return x
 
 def preprocess(tweet):
     stemmer = SnowballStemmer('english')
@@ -30,6 +36,8 @@ def preprocess(tweet):
     return tweet
 
 def tokenize(tweet):
+    blacklistword = False
+    whitelistword = False
     tknzr = TweetTokenizer()
     stop_words = stopwords.words('english')
     wordlist = tknzr.tokenize(tweet)
@@ -37,33 +45,82 @@ def tokenize(tweet):
     for word in wordlist:
         if word not in stop_words:
             wordlistwithoutstopwords.append(word)
+        if word in blacklist:
+            blacklistword = True
+        else:
+            if word in whitelist:
+                whitelistword = True
     toktweet = " ".join(wordlistwithoutstopwords)
-    return toktweet
+    if blacklistword:
+        if use_blacklist:
+            wordlistwithoutstopwords.append("BLACKLIST")   #Extra feature for blacklist
+        else:
+            pass
+    else:
+        if whitelistword:
+            if use_blacklist:
+                wordlistwithoutstopwords.append("WHITELIST") #Extra feature for whitelist
+            else:
+                pass
+    return wordlistwithoutstopwords
+
+def blacklist_reader():
+    file = open("../Data/offensive_words.txt", "r")
+    f = file.read().strip()
+    blacklist = f.split("\n")
+    return blacklist
+
+def whitelist_reader():
+    file = open("../Data/not_offensive_words.txt", "r")
+    f = file.read().strip()
+    whitelist = f.split("\n")
+    return whitelist
+
+def print_n_most_informative_features(coefs, features, n):
+    # Prints the n most informative features
+    most_informative_feature_list = [(coefs[0][nr],feature) for nr, feature in enumerate(features)]
+    sorted_most_informative_feature_list = sorted(most_informative_feature_list, key=lambda tup: abs(tup[0]), reverse=True)
+    print("\nMOST INFORMATIVE FEATURES\n#\tvalue\tfeature")
+    for nr, most_informative_feature in enumerate(sorted_most_informative_feature_list[:n]):
+        print(str(nr+1) + ".","\t%.3f\t%s" % (most_informative_feature[0], most_informative_feature[1]))
+
 
 def main():
-    dataframe = read_data()
-    X = dataframe['tweet'].tolist()
-    Y = dataframe['subtask_a'].tolist()
+    training_data, test_data_text, test_data_labels = read_data()
+    global blacklist
+    blacklist = blacklist_reader()
+    global whitelist
+    whitelist = whitelist_reader()
+    global use_blacklist
+    use_blacklist = False
+
+    Xtrain = training_data['tweet'].tolist()
+    Ytrain = training_data['subtask_a'].tolist()
+    Xtest = test_data_text['tweet'].tolist()
+    Ytest = test_data_labels['subtask_a'].tolist()
+
+    tfidf_vec = TfidfVectorizer(tokenizer = tokenize,
+                                preprocessor = preprocess,
+                                ngram_range = (1,5))
+
+    vec = FeatureUnion([("tfidf", tfidf_vec)])
 
 
+    #clf1 = DecisionTreeClassifier(max_depth=20)
+    #clf2 = KNeighborsClassifier(n_neighbors=9)
+    clf3 = LinearSVC(C=1)
+    #ens = VotingClassifier(estimators=[('dt', clf1), ('knn', clf2), ('svc', clf3)], voting='hard', weights=[1, 1, 1])
 
-    split_point = int(0.75*len(X))
-    Xtrain = X[:split_point]
-    Ytrain = Y[:split_point]
-    Xtest = X[split_point:]
-    Ytest = Y[split_point:]
-
-    vec = TfidfVectorizer(preprocessor = preprocess,
-                          tokenizer = tokenize,
-                          ngram_range = (1,5))
-
-
-    classifier = Pipeline( [('vec', vec),
-                            #('cls', MultinomialNB())] )
-                            #('cls', DecisionTreeClassifier(max_depth=60, min_impurity_decrease=0.001))] )
-                            ('cls', svm.LinearSVC())] )
+    classifier = Pipeline( [('vec', vec), ('cls', clf3)] )
 
     classifier.fit(Xtrain, Ytrain)
+
+
+    coefs = classifier.named_steps['cls'].coef_
+    features = classifier.named_steps['vec'].get_feature_names()
+    print_n_most_informative_features(coefs, features, 10)
+
+
 
     Yguess = classifier.predict(Xtest)
 
