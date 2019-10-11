@@ -94,47 +94,50 @@ def main():
     use_blacklist = True
 
 #    is_offensive =  training_data['subtask_a'] == 'OFF'
+    if len(sys.argv) > 1:
+        if sys.argv[1].lower() == "--a":
+            Xtrain = training_data['tweet'].tolist()
+            Ytrain = training_data['subtask_a'].tolist()
+            Xtest = dev_data['tweet'].tolist()
+            Ytest = dev_data['subtask_a'].tolist()
+        elif sys.argv[1].lower() == "--b":
+            training_data = training_data[training_data['subtask_a'] == 'OFF']
+            dev_data = dev_data[dev_data['subtask_a'] == 'OFF']
+            Xtrain = training_data['tweet'].tolist()
+            Ytrain = training_data['subtask_b'].tolist()
+            Xtest = dev_data['tweet'].tolist()
+            Ytest = dev_data['subtask_b'].tolist()
+        elif sys.argv[1].lower() == "--c":
+            training_data = training_data[training_data['subtask_b'] == 'TIN']
+            dev_data = dev_data[dev_data['subtask_b'] == 'TIN']
+            Xtrain = training_data['tweet'].tolist()
+            Ytrain = training_data['subtask_c'].tolist()
+            Xtest = dev_data['tweet'].tolist()
+            Ytest = dev_data['subtask_c'].tolist()
 
-    if sys.argv[1].lower() == "--a":
-        Xtrain = training_data['tweet'].tolist()
-        Ytrain = training_data['subtask_a'].tolist()
-        Xtest = dev_data['tweet'].tolist()
-        Ytest = dev_data['subtask_a'].tolist()
-    elif sys.argv[1].lower() == "--b":
-        training_data = training_data[training_data['subtask_a'] == 'OFF']
-        dev_data = dev_data[dev_data['subtask_a'] == 'OFF']
-        Xtrain = training_data['tweet'].tolist()
-        Ytrain = training_data['subtask_b'].tolist()
-        Xtest = dev_data['tweet'].tolist()
-        Ytest = dev_data['subtask_b'].tolist()
-    elif sys.argv[1].lower() == "--c":
-        training_data = training_data[training_data['subtask_b'] == 'TIN']
-        dev_data = dev_data[dev_data['subtask_b'] == 'TIN']
-        Xtrain = training_data['tweet'].tolist()
-        Ytrain = training_data['subtask_c'].tolist()
-        Xtest = dev_data['tweet'].tolist()
-        Ytest = dev_data['subtask_c'].tolist()
+        vec = TfidfVectorizer(tokenizer = tokenize,
+                              preprocessor = preprocess,
+                              ngram_range = (1,5))
 
-    vec = TfidfVectorizer(tokenizer = tokenize,
-                          preprocessor = preprocess,
-                          ngram_range = (1,5))
+        #clf1 = DecisionTreeClassifier(max_depth=20)
+        #clf2 = KNeighborsClassifier(n_neighbors=9)
+        clf3 = LinearSVC(C=1)
+        #ens = VotingClassifier(estimators=[('dt', clf1), ('knn', clf2), ('svc', clf3)], voting='hard', weights=[1, 1, 1])
 
-    #clf1 = DecisionTreeClassifier(max_depth=20)
-    #clf2 = KNeighborsClassifier(n_neighbors=9)
-    clf3 = LinearSVC(C=1)
-    #ens = VotingClassifier(estimators=[('dt', clf1), ('knn', clf2), ('svc', clf3)], voting='hard', weights=[1, 1, 1])
+        classifier = Pipeline( [('vec', vec), ('cls', clf3)] )
 
-    classifier = Pipeline( [('vec', vec), ('cls', clf3)] )
+        classifier.fit(Xtrain, Ytrain)
 
-    classifier.fit(Xtrain, Ytrain)
+        coefs = classifier.named_steps['cls'].coef_
+        features = classifier.named_steps['vec'].get_feature_names()
+        print_n_most_informative_features(coefs, features, 10)
 
-    coefs = classifier.named_steps['cls'].coef_
-    features = classifier.named_steps['vec'].get_feature_names()
-    print_n_most_informative_features(coefs, features, 10)
+        Yguess = classifier.predict(Xtest)
 
-    Yguess = classifier.predict(Xtest)
-
-    print(classification_report(Ytest, Yguess))
+        print(classification_report(Ytest, Yguess))
+        
+    else:
+        print("Enter a parameter")
 
 if __name__ == '__main__':
     main()
