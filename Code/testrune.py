@@ -93,16 +93,27 @@ def main():
     global use_blacklist
     use_blacklist = True
 
+#    is_offensive =  training_data['subtask_a'] == 'OFF'
+
     if sys.argv[1].lower() == "--a":
         Xtrain = training_data['tweet'].tolist()
         Ytrain = training_data['subtask_a'].tolist()
         Xtest = dev_data['tweet'].tolist()
         Ytest = dev_data['subtask_a'].tolist()
     elif sys.argv[1].lower() == "--b":
+        training_data = training_data[training_data['subtask_a'] == 'OFF']
+        dev_data = dev_data[dev_data['subtask_a'] == 'OFF']
         Xtrain = training_data['tweet'].tolist()
         Ytrain = training_data['subtask_b'].tolist()
         Xtest = dev_data['tweet'].tolist()
         Ytest = dev_data['subtask_b'].tolist()
+    elif sys.argv[1].lower() == "--c":
+        training_data = training_data[training_data['subtask_b'] == 'TIN']
+        dev_data = dev_data[dev_data['subtask_b'] == 'TIN']
+        Xtrain = training_data['tweet'].tolist()
+        Ytrain = training_data['subtask_c'].tolist()
+        Xtest = dev_data['tweet'].tolist()
+        Ytest = dev_data['subtask_c'].tolist()
 
     vec = TfidfVectorizer(tokenizer = tokenize,
                           preprocessor = preprocess,
@@ -113,7 +124,7 @@ def main():
     clf3 = LinearSVC(C=1)
     #ens = VotingClassifier(estimators=[('dt', clf1), ('knn', clf2), ('svc', clf3)], voting='hard', weights=[1, 1, 1])
 
-    classifier = Pipeline( [('vec', vec), ('cls', clf3)] ) #ensemble?
+    classifier = Pipeline( [('vec', vec), ('cls', clf3)] )
 
     classifier.fit(Xtrain, Ytrain)
 
