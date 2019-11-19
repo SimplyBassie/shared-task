@@ -14,6 +14,18 @@ warnings.filterwarnings('ignore')
 def read_data():
     # id	tweet	subtask_a	subtask_b	subtask_c
     training_set = pd.read_csv("../Data/olid-training-v1.0.tsv", sep='\t')
+    """
+    level_a_text = pd.read_csv("../Data/testset-levela.tsv", sep='\t')
+    level_a_labels = pd.read_csv("../Data/labels-levela.csv")
+    level_b_labels = pd.read_csv("../Data/labels-levelb.csv")
+    level_c_labels = pd.read_csv("../Data/labels-levelb.csv")
+    level_a_labels.columns = ['id', 'subtask_a']
+    level_b_labels.columns = ['id', 'subtask_b']
+    level_c_labels.columns = ['id', 'subtask_b']
+    result = pd.merge(level_a_text, level_a_labels, on = 'id')
+    result = pd.merge(result, level_b_labels, on = 'id')
+    result = pd.merge(result, level_c_labels, on = 'id')
+    """
 
     #training_set['subtask_c'] = training_set['subtask_c'].apply(lambda x: subtask_c_dict[x])
     training_data = training_set[(training_set.index < np.percentile(training_set.index, 80))]
@@ -27,9 +39,7 @@ def create_model(num_filters, kernel_size, vocab_size, embedding_dim, maxlen):
     model.add(layers.GlobalMaxPooling1D())
     model.add(layers.Dense(10, activation='relu'))
     model.add(layers.Dense(1, activation='sigmoid'))
-    model.compile(optimizer='adam',
-                  loss='binary_crossentropy',
-                  metrics=['accuracy'])
+    model.compile(optimizer='adam',loss='binary_crossentropy',metrics=['accuracy'])
     return model
 
 def main():
@@ -69,7 +79,6 @@ def main():
         epochs = 5
         embedding_dim = 50
         maxlen = 100
-        output_file = 'data/output.txt'
 
         # Tokenize words
         tokenizer = Tokenizer(num_words=5000)
