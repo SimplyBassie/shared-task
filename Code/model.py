@@ -87,7 +87,7 @@ def print_n_most_informative_features(coefs, features, n):
         print(str(nr+1) + ".","\t%.3f\t%s" % (most_informative_feature[0], most_informative_feature[1]))
 
 def create_confusion_matrix(true, pred):
-    # Build confusion matrix with matplotlib     
+    # Build confusion matrix with matplotlib
     classes = sorted(list(set(pred)))
     # Build matrix
     cm = confusion_matrix(true, pred, labels = classes)
@@ -136,7 +136,8 @@ def main():
 
     vec = TfidfVectorizer(tokenizer = tokenize,
                           preprocessor = preprocess,
-                          ngram_range = (1,5))
+                          analyzer = 'char_wb',
+                          ngram_range = (1,9))
 
     #clf1 = DecisionTreeClassifier(max_depth=20)
     #clf2 = KNeighborsClassifier(n_neighbors=9)
