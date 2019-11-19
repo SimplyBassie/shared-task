@@ -1,7 +1,7 @@
 import pandas as pd
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.svm import LinearSVC
 import sys
 from nltk.corpus import stopwords
@@ -13,9 +13,11 @@ from sklearn.ensemble import VotingClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 import numpy as np
+import matplotlib.pyplot as plt
+
 
 def read_data():
-    # id	tweet	subtask_a	subtask_b	subtask_c
+    # id    tweet   subtask_a   subtask_b   subtask_c
     training_set = pd.read_csv("../Data/olid-training-v1.0.tsv", sep='\t')
     training_data = training_set[(training_set.index < np.percentile(training_set.index, 80))]
     dev_data = training_set[(training_set.index > np.percentile(training_set.index, 80))]
@@ -44,11 +46,12 @@ def tokenize(tweet):
     for word in wordlist:
         if word not in stop_words:
             wordlistwithoutstopwords.append(word)
-        if word in blacklist:
-            blacklistword = True
-        else:
-            if word in whitelist:
-                whitelistword = True
+        if use_blacklist:
+            if word in blacklist:
+                blacklistword = True
+            else:
+                if word in whitelist:
+                    whitelistword = True
     toktweet = " ".join(wordlistwithoutstopwords)
     if blacklistword:
         if use_blacklist:
@@ -83,15 +86,26 @@ def print_n_most_informative_features(coefs, features, n):
     for nr, most_informative_feature in enumerate(sorted_most_informative_feature_list[:n]):
         print(str(nr+1) + ".","\t%.3f\t%s" % (most_informative_feature[0], most_informative_feature[1]))
 
+def create_confusion_matrix(true, pred):
+    # Build confusion matrix with matplotlib     
+    classes = sorted(list(set(pred)))
+    # Build matrix
+    cm = confusion_matrix(true, pred, labels = classes)
+    cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+    # Make plot
+    plt.imshow(cm, interpolation = 'nearest', cmap=plt.cm.Blues)
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=90)
+    plt.xlabel('Predicted label')
+    plt.yticks(tick_marks, classes)
+    plt.ylabel('True label')
+    plt.show()
 
 def main():
     training_data, dev_data = read_data()
-    global blacklist
-    blacklist = blacklist_reader()
-    global whitelist
-    whitelist = whitelist_reader()
+
     global use_blacklist
-    use_blacklist = True
+    use_blacklist = False
 
 #    is_offensive =  training_data['subtask_a'] == 'OFF'
 
@@ -100,6 +114,11 @@ def main():
         Ytrain = training_data['subtask_a'].tolist()
         Xtest = dev_data['tweet'].tolist()
         Ytest = dev_data['subtask_a'].tolist()
+        use_blacklist = True
+        global blacklist
+        global whitelist
+        blacklist = blacklist_reader()
+        whitelist = whitelist_reader()
     elif sys.argv[1].lower() == "--b":
         training_data = training_data[training_data['subtask_a'] == 'OFF']
         dev_data = dev_data[dev_data['subtask_a'] == 'OFF']
@@ -135,6 +154,9 @@ def main():
     Yguess = classifier.predict(Xtest)
 
     print(classification_report(Ytest, Yguess))
+    print(confusion_matrix(Ytest, Yguess))
+    create_confusion_matrix(Ytest, Yguess)
+    pass
 
 if __name__ == '__main__':
     main()
