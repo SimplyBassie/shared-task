@@ -1,12 +1,15 @@
+#!/usr/bin/env python
 from simpletransformers.classification import MultiLabelClassificationModel
 from sklearn.metrics import classification_report, confusion_matrix
 import numpy as np
 import pandas as pd
+from emoji_to_words import emoji_to_words
+from hashtags import split_hashtags, do_splitting
 
 def main():
-    architecture = 'roberta'
-    model_type = 'roberta-base'
-    subtask = 'B'
+    architecture = 'bert'
+    model_type = 'bert-base-uncased'
+    subtask = 'C'
     size = "small" # small or large
     balance = False
     output_path = 'outputs/'+architecture+'/'+model_type+'/'+size+'/subtask'+subtask
@@ -60,6 +63,9 @@ def main():
     train_df = datafile_train[["text","labels"]]
     #train_df = train_df[(train_df.index < np.percentile(train_df.index, 40))]
 
+    train_df['text'] = train_df['text'].apply(lambda x: do_splitting(x))
+    train_df['text'] = train_df['text'].apply(lambda x: emoji_to_words(x))
+
     subtask_c_dict = {0: [1,0,0], 1 : [0,1,0], 2: [0,0,1]}
     subtask_b_dict = {0: [1,0], 1 : [0,1]}
     if subtask.lower() == 'c':
@@ -77,6 +83,9 @@ def main():
     #eval_df = eval_df[(eval_df.index < np.percentile(eval_df.index, 40))]
     labels = eval_df["labels"].tolist()
 
+    eval_df['text'] = eval_df['text'].apply(lambda x: do_splitting(x))
+    eval_df['text'] = eval_df['text'].apply(lambda x: emoji_to_words(x))
+
     if subtask.lower() == 'c':
         eval_df['labels'] = eval_df['labels'].apply(lambda x: subtask_c_dict[x])
     else:
@@ -87,23 +96,28 @@ def main():
 
     # Train the model
     model.train_model(train_df)
-
+    print("TRAINING DONE")
+    # Evaluate the model
+    result, model_outputs, wrong_predictions = model.eval_model(eval_df)
+    print(result)
+    print(model_outputs)
+    print("EVALUATING DONE")
     # Predict
     predictions, raw_outputs = model.predict(eval_df['text'])
     print(raw_outputs)
-
+    print("PREDICTING DONE")
     for num, pred in enumerate(predictions):
         if pred[0] == 1:
             predictions[num] = 0
         elif pred[1] == 1:
             predictions[num] = 1
-        elif pred[2] == 1:
-            predictions[num] = 2
-        else:
-            if subtask.lower() == 'c':
-                predictions[num] = 1
+        elif subtask.lower() == 'c':
+            if pred[2] == 1:
+                predictions[num] = 2
             else:
-                predictions[num] = 1 #Largest group
+                predictions[num] = 1
+        else:
+            predictions[num] = 1 #Largest group
 
     print(classification_report(labels, predictions))
     print(confusion_matrix(labels, predictions))

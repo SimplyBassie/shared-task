@@ -1,7 +1,8 @@
-def main():
-    hashtag = "#FuckTrumpManMAN"
-    hashtag_string = split_hashtags(hashtag)
-    print(hashtag_string)
+def do_splitting(string):
+    for word in string.split():
+        if word[0] == "#":
+            string = string.replace(word, split_hashtags(word))
+    return string
 
 def split_hashtags(hashtag):
     uppercount = 0
@@ -37,7 +38,4 @@ def split_hashtags(hashtag):
             hashtag_string = " ".join(newwordlist)        
     if lower:
         hashtag_string = hashtag_string[0].lower() + hashtag_string[1:]
-    return hashtag_string
-
-if __name__ == '__main__':
-    main()
+    return hashtag_string+' '+hashtag_string

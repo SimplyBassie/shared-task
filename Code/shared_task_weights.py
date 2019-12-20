@@ -2,11 +2,13 @@ from simpletransformers.classification import ClassificationModel
 from sklearn.metrics import classification_report, confusion_matrix
 import numpy as np
 import pandas as pd
+from emoji_to_words import emoji_to_words
+from hashtags import split_hashtags, do_splitting
 
 def main():
-    architecture = 'roberta'
-    model_type = 'roberta-base'
-    subtask = 'B'
+    architecture = 'bert'
+    model_type = 'bert-base-uncased'
+    subtask = 'C'
     size = "small" # small or large
     balance = False
     output_path = 'outputs/'+architecture+'/'+model_type+'/'+size+'/subtask'+subtask
@@ -47,6 +49,9 @@ def main():
     train_df = datafile_train[["text","labels"]]
     train_df = train_df[(train_df.index < np.percentile(train_df.index, 40))] #for testing
 
+    train_df['text'] = train_df['text'].apply(lambda x: do_splitting(x))
+    train_df['text'] = train_df['text'].apply(lambda x: emoji_to_words(x))
+
     # Create eval_df
     if balance:
         datafile_dev = pd.read_csv(path+'/dev_balanced.tsv', sep='\t', names=["id","labels","subtask","text"])
@@ -55,13 +60,16 @@ def main():
     eval_df = datafile_dev[["text","labels"]]
     eval_df = eval_df[(eval_df.index < np.percentile(eval_df.index, 40))] #for testing
 
+    eval_df['text'] = eval_df['text'].apply(lambda x: do_splitting(x))
+    eval_df['text'] = eval_df['text'].apply(lambda x: emoji_to_words(x))
+
     # Create a ClassificationModel
     if 'subtaskc' in path.lower():
         numlab= 3
-        weights = [1,1,1]
+        weights = [1,2,3]
     else:
         numlab=2
-        weights = [1,1]
+        weights = [1,15]
     model = ClassificationModel(architecture, model_type, args=args, use_cuda = False, num_labels=numlab, weight=weights) # You can set class weights by using the optional weight argument
 
     # Train the model
