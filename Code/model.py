@@ -14,7 +14,9 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 import numpy as np
 import matplotlib.pyplot as plt
-
+from nltk import pos_tag
+import hashtags
+import emoji_to_words
 
 def read_data():
     # id    tweet   subtask_a   subtask_b   subtask_c
@@ -29,14 +31,10 @@ def identity(x):
     return x
 
 def preprocess(tweet):
-    stemmer = SnowballStemmer('english')
-    lemmatizer = WordNetLemmatizer()
-    pptweetlist = []
-    tweet = stemmer.stem(tweet)
-    tweet = lemmatizer.lemmatize(tweet)
-    return tweet
-
-def tokenize(tweet):
+#    stemmer = SnowballStemmer('english')
+#    lemmatizer = WordNetLemmatizer()
+#    tweet = stemmer.stem(tweet)
+#    tweet = lemmatizer.lemmatize(tweet)
     blacklistword = False
     whitelistword = False
     tknzr = TweetTokenizer()
@@ -44,7 +42,7 @@ def tokenize(tweet):
     wordlist = tknzr.tokenize(tweet)
     wordlistwithoutstopwords = []
     for word in wordlist:
-        if word not in stop_words:
+        if word not in stop_words or pos_tag([word])[0][1] == "PRP":
             wordlistwithoutstopwords.append(word)
         if use_blacklist:
             if word in blacklist:
@@ -52,7 +50,6 @@ def tokenize(tweet):
             else:
                 if word in whitelist:
                     whitelistword = True
-    toktweet = " ".join(wordlistwithoutstopwords)
     if blacklistword:
         if use_blacklist:
             wordlistwithoutstopwords.append("BLACKLIST")   #Extra feature for blacklist
@@ -64,7 +61,23 @@ def tokenize(tweet):
                 wordlistwithoutstopwords.append("WHITELIST") #Extra feature for whitelist
             else:
                 pass
-    return wordlistwithoutstopwords
+    toktweet = " ".join(wordlistwithoutstopwords)
+
+#    for word in toktweet.split():
+#        try:
+#            toktweet=toktweet.replace(word,hashtags.do_splitting(word))
+#        except:
+#            print(toktweet, "do_splitting")
+#        try:
+#            toktweet=toktweet.replace(word,emoji_to_words.emoji_to_words(word))
+#        except:
+#            print(toktweet, "emoji")
+
+    return toktweet
+
+def tokenize(tweet):
+    wordlist = tknzr.tokenize(tweet)
+    return wordlist 
 
 def blacklist_reader():
     file = open("../Data/offensive_words.txt", "r")
