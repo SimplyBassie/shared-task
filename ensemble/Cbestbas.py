@@ -114,7 +114,7 @@ def Cbestbas():
         else:
             predictions[num] = 1 #Largest group
 
-    print("Best model Kai task C:")
+    print("Best model Bas task C:")
     print(classification_report(labels, predictions))
     print(confusion_matrix(labels, predictions))
     model1_outputs = model_outputs.tolist()
