@@ -4,7 +4,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 import numpy as np
 import pandas as pd
 
-def Cbestkai():
+def Cbestbas():
     architecture = 'xlnet'
     model_type = 'xlnet-base-cased'
     subtask = 'C'
