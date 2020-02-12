@@ -5,7 +5,7 @@ import pandas as pd
 from emoji_to_words import emoji_to_words
 from hashtags import do_splitting
 
-def Abestbas():
+def Abestxlnet():
     architecture = 'xlnet'
     model_type = 'xlnet-base-cased'
     subtask = 'A'
@@ -76,7 +76,7 @@ def Abestbas():
     # Evaluate the model
     result, model_outputs, wrong_predictions = model.eval_model(eval_df, cr=classification_report, cm=confusion_matrix)
 
-    print("Best model Bas task A:")
+    print("Best model xlnet task A:")
     print(model_outputs)
     print(result['cr']) # Classification report
     print(result['cm']) # Confusion matrix
