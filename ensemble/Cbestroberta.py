@@ -6,7 +6,7 @@ import pandas as pd
 from emoji_to_words import *
 from hashtags import *
 
-def Cbestrune():
+def Cbestroberta():
     architecture = 'roberta'
     model_type = 'roberta-base'
     subtask = 'C'
@@ -118,7 +118,7 @@ def Cbestrune():
         else:
             predictions[num] = 1 #Largest group
 
-    print("Best model Rune task C:")
+    print("Best model roberta task C:")
     print(classification_report(labels, predictions))
     print(confusion_matrix(labels, predictions))
     model1_outputs = model_outputs.tolist()
