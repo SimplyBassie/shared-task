@@ -4,7 +4,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 import numpy as np
 import pandas as pd
 
-def Cbestkai():
+def Cbestbert():
     architecture = 'bert'
     model_type = 'bert-base-cased'
     subtask = 'C'
@@ -114,7 +114,7 @@ def Cbestkai():
         else:
             predictions[num] = 1 #Largest group
 
-    print("Best model Kai task C:")
+    print("Best model bert task C:")
     print(classification_report(labels, predictions))
     print(confusion_matrix(labels, predictions))
     model1_outputs = model_outputs.tolist()
