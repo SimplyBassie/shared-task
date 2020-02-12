@@ -1,13 +1,13 @@
 from sklearn.metrics import classification_report, confusion_matrix
-from Abestbas import *
-from Bbestbas import *
-from Cbestbas import *
-from Abestkai import *
-from Bbestkai import *
-from Cbestkai import *
-from Abestrune import *
-from Bbestrune import *
-from Cbestrune import *
+from Abestxlnet import *
+from Bbestxlnet import *
+from Cbestxlnet import *
+from Abestbert import *
+from Bbestbert import *
+from Cbestbert import *
+from Abestroberta import *
+from Bbestroberta import *
+from Cbestroberta import *
 def voting_ensemble(list1, list2, list3, eval_list):
     ensemblepredlist = []
     for i in range(len(list1)):
@@ -17,7 +17,7 @@ def voting_ensemble(list1, list2, list3, eval_list):
         predictionslist = [pred1, pred2, pred3]
         finalpred = max(set(predictionslist), key = predictionslist.count)
         ensemblepredlist.append(finalpred)
-    #print(ensemblepredlist)
+    #print(ensemblepredlist)K
     #print(eval_list)
     print("VOTING ENSEMBLE:")
     print(classification_report(eval_list, ensemblepredlist))
@@ -48,21 +48,21 @@ def weighted_ensemble(model1_outputs, model2_outputs, model3_outputs, eval_list)
 
 def main():
     print("TASK A:")
-    weights1, preds1, eval_list = Abestrune()
-    weights2, preds2, eval_list = Abestbas()
-    weights3, preds3, eval_list = Abestkai()
+    weights1, preds1, eval_list = Abestroberta()
+    weights2, preds2, eval_list = Abestxlnet()
+    weights3, preds3, eval_list = Abestbert()
     voting_ensemble(preds1, preds2, preds3, eval_list)
     weighted_ensemble(weights1, weights2, weights3, eval_list)
     #print("TASK B:")
-    #weights1, preds1, eval_list = Bbestrune()
-    #weights2, preds2, eval_list = Bbestbas()
-    #weights3, preds3, eval_list = Bbestkai()
+    #weights1, preds1, eval_list = Bbestroberta()
+    #weights2, preds2, eval_list = Bbestxlnet()
+    #weights3, preds3, eval_list = Bbestbert()
     #voting_ensemble(preds1, preds2, preds3, eval_list)
     #weighted_ensemble(weights1, weights2, weights3, eval_list)
     #print("TASK C:")
-    #weights1, preds1, eval_list = Cbestrune()
-    #weights2, preds2, eval_list = Cbestbas()
-    #weights3, preds3, eval_list = Cbestkai()
+    #weights1, preds1, eval_list = Cbestroberta()
+    #weights2, preds2, eval_list = Cbestxlnet()
+    #weights3, preds3, eval_list = Cbestbert()
     #voting_ensemble(preds1, preds2, preds3, eval_list)
     #weighted_ensemble(weights1, weights2, weights3, eval_list)
 
