@@ -4,7 +4,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 import numpy as np
 import pandas as pd
 
-def Cbestbas():
+def Cbestxlnet():
     architecture = 'xlnet'
     model_type = 'xlnet-base-cased'
     subtask = 'C'
@@ -114,7 +114,7 @@ def Cbestbas():
         else:
             predictions[num] = 1 #Largest group
 
-    print("Best model Bas task C:")
+    print("Best model xlnet task C:")
     print(classification_report(labels, predictions))
     print(confusion_matrix(labels, predictions))
     model1_outputs = model_outputs.tolist()
