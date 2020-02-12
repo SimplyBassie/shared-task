@@ -6,7 +6,7 @@ from hashtags import *
 from emoji_to_words import *
 
 
-def Bbestrune():
+def Bbestroberta():
     architecture = 'roberta'
     model_type = 'roberta-base'
     subtask = 'B'
@@ -78,7 +78,7 @@ def Bbestrune():
     # Evaluate the model
     result, model_outputs, wrong_predictions = model.eval_model(eval_df, cr=classification_report, cm=confusion_matrix)
 
-    print("Best model Rune task B:")
+    print("Best model roberta task B:")
     print(model_outputs)
     print(result['cr']) # Classification report
     print(result['cm']) # Confusion matrix
